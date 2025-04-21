@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -81,14 +81,20 @@ const ErrorFallback = ({
 };
 
 const App: React.FC = () => {
+  const { colorMode, toggleColorMode } = useColorMode();
+  const bgColor = useColorModeValue("#fff", "gray.800");
+  const buttonBg = useColorModeValue("gray.200", "gray.700");
+  const showTooltip = useBreakpointValue({ base: false, md: true });
+  const headingColor = useColorModeValue("brand.500", "brand.50");
+  const resultsHeadingColor = useColorModeValue("brand.500", "brand.50");
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [question, setQuestion] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [eventLogs, setEventLogs] = useState<EventLogType[]>([]);
-  const [streamedText, setStreamedText] = useState<{ [key: string]: string }>(
-    {}
-  );
+  const [streamedText, setStreamedText] = useState<{ [key: string]: string }>({});
+  const streamedTextRef = useRef(streamedText);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [isSessionLoading, setIsSessionLoading] = useState<boolean>(true);
   const [latestInquiryId, setLatestInquiryId] = useState<string | undefined>(
@@ -96,10 +102,6 @@ const App: React.FC = () => {
   );
 
   const [isLogOpen, setIsLogOpen] = useState(false);
-
-  const { colorMode, toggleColorMode } = useColorMode();
-  const bgColor = useColorModeValue("#fff", "gray.800");
-  const buttonBg = useColorModeValue("gray.200", "gray.700");
 
   useEffect(() => {
     const initializeSession = async (attempt = 1, maxAttempts = 3) => {
@@ -147,7 +149,7 @@ const App: React.FC = () => {
         return updatedInquiries;
       });
 
-      if (inquiry.status === "done" && !streamedText[inquiry.id]) {
+      if (inquiry.status === "done" && !streamedTextRef.current[inquiry.id]) {
         startStreaming(inquiry.id);
       }
     });
@@ -155,6 +157,10 @@ const App: React.FC = () => {
     return () => {
       socket.off("inquiry_updated");
     };
+  }, []);
+
+  useEffect(() => {
+    streamedTextRef.current = streamedText;
   }, [streamedText]);
 
   const addEventLog = (message: string) => {
@@ -240,8 +246,6 @@ const App: React.FC = () => {
     setIsLogOpen((prev) => !prev);
   };
 
-  const showTooltip = useBreakpointValue({ base: false, md: true });
-
   return (
     <ChakraProvider theme={theme} key={colorMode}>
       <ErrorBoundary
@@ -264,7 +268,7 @@ const App: React.FC = () => {
                 <Heading
                   onClick={clearResults}
                   size={{ base: "md", md: "lg", lg: "xl" }}
-                  color={useColorModeValue("brand.500", "brand.50")}
+                  color={headingColor}
                   cursor="pointer"
                 >
                   Business Analytics Dashboard
@@ -384,7 +388,7 @@ const App: React.FC = () => {
                   {inquiries.length > 0 && (
                     <Heading
                       size="md"
-                      color={useColorModeValue("brand.500", "brand.50")}
+                      color={resultsHeadingColor}
                       mb={3}
                     >
                       Results

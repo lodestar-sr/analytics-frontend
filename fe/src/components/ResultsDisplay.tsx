@@ -66,6 +66,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const syntaxTheme = useColorModeValue(prism, vscDarkPlus);
   const exampleBg = useColorModeValue("gray.100", "gray.600");
   const exampleHoverBg = useColorModeValue("gray.200", "gray.500");
+  const hoverBorderColor = useColorModeValue("brand.500", "brand.50");
 
   const inquiryRefs = useRef<{ [key: string]: HTMLElement | null }>({});
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -157,19 +158,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 boxShadow="md"
                 transition="all 0.2s"
                 _hover={{
-                  borderColor: useColorModeValue("brand.500", "brand.50"),
+                  borderColor: hoverBorderColor,
                 }}
               >
                 <Heading size="sm" color={textColor} mb={3}>
                   {inquiry.question}
                 </Heading>
-                <Text fontSize="sm" color={secondaryTextColor} mb={2}>
+                <Box fontSize="sm" color={secondaryTextColor} mb={2}>
                   <strong>Status:</strong>{" "}
                   {inquiry.status === "done" ? "Completed" : "Processing"}
                   {inquiry.status !== "done" && (
                     <Spinner size="xs" ml={2} color="brand.500" />
                   )}
-                </Text>
+                </Box>
                 {inquiry.timeFrame && (
                   <Text fontSize="sm" color={secondaryTextColor} mb={2}>
                     <strong>Time Frame:</strong> {inquiry.timeFrame}
