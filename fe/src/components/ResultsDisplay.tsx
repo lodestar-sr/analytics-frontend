@@ -6,7 +6,8 @@ import {
   Spinner,
   VStack,
   useColorModeValue,
-  Center,
+  Center, 
+  IconButton,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -17,6 +18,7 @@ import {
 import ChartRenderer from "./ChartRenderer";
 import TableRenderer from "./TableRenderer";
 import { useRef, useEffect } from "react";
+import { FiPrinter } from "react-icons/fi";
 
 interface ChartConfig {
   xAxis: { key: string; label: string };
@@ -93,6 +95,148 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
   };
 
+  const handlePrint = (inquiryId: string) => {
+    const elementToPrint = inquiryRefs.current[inquiryId];
+    if (elementToPrint) {
+      // Get all stylesheets and inline styles from the current document
+      const stylesheets = Array.from(document.styleSheets)
+        .map(sheet => {
+          try {
+            if (sheet.href) {
+              return `<link rel="stylesheet" href="${sheet.href}">`;
+            } else {
+              // Get inline styles
+              const rules = Array.from(sheet.cssRules)
+                .map(rule => rule.cssText)
+                .join('\n');
+              return `<style>${rules}</style>`;
+            }
+          } catch (e) {
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      // Open a new window for printing
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        // Write the HTML content with all necessary styles
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print Inquiry</title>
+              ${stylesheets.join('\n')}
+              <style>
+                @media print {
+                  @page {
+                    margin: 0;
+                    size: auto;
+                  }
+                  body {
+                    margin: 0;
+                    padding: 20px;
+                    background: white;
+                    color: black;
+                  }
+                  .print-content {
+                    width: 100%;
+                    max-width: none;
+                  }
+                  .print-content .chakra-box {
+                    width: 100%;
+                    max-width: none;
+                    box-shadow: none;
+                    background: white;
+                  }
+                  .print-content .chakra-icon-button {
+                    display: none !important;
+                  }
+                  .print-content table {
+                    width: 100% !important;
+                    max-width: none !important;
+                    border-collapse: collapse !important;
+                    border: 1px solid #ddd !important;
+                  }
+                  .print-content table th,
+                  .print-content table td {
+                    border: 1px solid #ddd !important;
+                    padding: 8px !important;
+                    text-align: left !important;
+                  }
+                  .print-content table th {
+                    background-color: #f5f5f5 !important;
+                    font-weight: bold !important;
+                  }
+                  .print-content .chakra-stack {
+                    width: 100%;
+                    max-width: none;
+                  }
+                  .print-content pre {
+                    white-space: pre-wrap !important;
+                    word-wrap: break-word !important;
+                    max-width: 100% !important;
+                    overflow-x: hidden !important;
+                  }
+                  .print-content code {
+                    white-space: pre-wrap !important;
+                    word-wrap: break-word !important;
+                    max-width: 100% !important;
+                    overflow-x: hidden !important;
+                  }
+                  .print-content .react-syntax-highlighter {
+                    width: 100% !important;
+                    max-width: none !important;
+                    overflow-x: hidden !important;
+                  }
+                  .print-content .react-syntax-highlighter pre {
+                    width: 100% !important;
+                    max-width: none !important;
+                    overflow-x: hidden !important;
+                    white-space: pre-wrap !important;
+                    word-wrap: break-word !important;
+                  }
+                }
+                @media screen {
+                  body {
+                    background: white;
+                    color: black;
+                    padding: 20px;
+                  }
+                  .print-content {
+                    width: 100%;
+                    max-width: none;
+                  }
+                  .print-content .chakra-box {
+                    width: 100%;
+                    max-width: none;
+                    background: white;
+                  }
+                  .print-content table {
+                    width: 100% !important;
+                    max-width: none !important;
+                    border-collapse: collapse !important;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="print-content">
+                ${elementToPrint.outerHTML}
+              </div>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        
+        // Wait for styles to load before printing
+        printWindow.onload = () => {
+          printWindow.print();
+          printWindow.close();
+        };
+      }
+    }
+  }
+
   // Display example questions when no inquiries exist
   if (inquiries.length === 0) {
     return (
@@ -164,6 +308,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <Heading size="sm" color={textColor} mb={3}>
                   {inquiry.question}
                 </Heading>
+                <IconButton
+                  aria-label="Print inquiry"
+                  icon={<FiPrinter />}
+                  onClick={() => handlePrint(inquiry.id)}
+                  size="sm"
+                  variant="outline"
+                  position="absolute"
+                  top={4}
+                  right={4}
+                  borderRadius="full"
+                  colorScheme="brand"
+                />
                 <Box fontSize="sm" color={secondaryTextColor} mb={2}>
                   <strong>Status:</strong>{" "}
                   {inquiry.status === "done" ? "Completed" : "Processing"}
