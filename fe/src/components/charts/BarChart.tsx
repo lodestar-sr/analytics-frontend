@@ -9,7 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { ChartProps } from "./types";
+import { ChartProps } from "../../utils/types.ts";
 
 const BarChartComponent: React.FC<ChartProps> = ({ tableData, chartConfig }) => {
   const { colorMode } = useColorMode();

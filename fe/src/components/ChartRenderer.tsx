@@ -1,4 +1,4 @@
-import { ChartConfig } from "./charts/types";
+import { ChartConfig } from "../utils/types.ts";
 import BarChartComponent from "./charts/BarChart";
 import LineChartComponent from "./charts/LineChart";
 import PieChartComponent from "./charts/PieChart";
